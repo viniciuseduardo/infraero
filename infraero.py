@@ -118,10 +118,13 @@ class Infraero:
         """Open search results"""
         return self._url_open(self.RESULTS_URL)
 
-    def _post_search_form(self, airport):
+    def _post_search_form(self, airport, flight_number = None):
         data = self._form_data
         data['btnPesquisar'] = 'Consultar Voos'
         data['aero_companias_aeroportos'] = airport
+        if flight_number != None:
+        	data['txt_num_voo'] = flight_number
+
         return self._url_open(self.HOME_URL, data, delta=True)
 
     def _set_completed_on(self, html):
@@ -240,7 +243,7 @@ class Infraero:
         return {'cookies': self._cj.dump(),
                 'form_data': self._form_data}
 
-    def search_airport(self, airport, completed=False, departure=False):
+    def search_airport(self, airport, flight_number = None, completed=False, departure=False):
         self._open_home()
         self._post_search_form(airport)
         html = self._open_results()
@@ -261,24 +264,25 @@ class Infraero:
 
 ###################################3
 
-def test():
+if __name__ == "__main__":
     results = {}
     airports = set()
     stops = {}
 
     i = Infraero() #proxy='10.138.15.10:8080'
-    for icao in icao_codes:
+    for icao in ['SBGL']:
         print 'fetching', icao
         results[icao] = {}
-        r = i.search_airport(icao, completed=False, departure=False)
+        r = i.search_airport(icao, flight_number = None, completed=False, departure=True)
 
         while True:
             page = r['pages']['current']
             results[icao][page] = r
 
             for flight in r['flights']:
-                if flight['airport'] not in airports:
-                    airports.add((flight['airport'], flight['UF']))
+                if flight['airport'] not in airports:	
+                    print flight
+                    # airports.add((flight['flight_number'], flight['UF']))
                 for stop in flight['stops']:
                     stops[stop[0]] = stop[1]
 
@@ -288,4 +292,4 @@ def test():
             else:
                 break
 
-    return (airports, stops)
+    # print airports
